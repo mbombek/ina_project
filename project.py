@@ -128,8 +128,12 @@ def simulate(G, N, retweet_prob, candidates, name=""):
 
     prev_prog = 0
     print(f"{name} PRE PROGRESS: [", end="")
+    l_g_ratio_pre = 0
     for i in range(N):
-        hist_pre[cascade(G, retweet_prob, [], False)] += 1
+        g, g_sum = cascade_agg(G, retweet_prob, candidates)
+        hist_pre[g_sum] += 1
+        if g:
+            l_g_ratio_pre += 1
         
         prog = int((i / N) * 100)
         if prog % 10 == 0 and prog > prev_prog:
@@ -139,9 +143,13 @@ def simulate(G, N, retweet_prob, candidates, name=""):
 
     prev_prog = 0
     print(f"{name} POST PROGRESS: [", end="")
+    l_g_ratio_post = 0
     for i in range(N):
-        hist_post[cascade(G, retweet_prob, candidates, False)] += 1
-        
+        g, g_sum = cascade_agg(G, retweet_prob, candidates)
+        hist_post[g_sum] += 1
+        if g:
+            l_g_ratio_post += 1
+
         prog = int((i / N) * 100)
         if prog % 10 == 0 and prog > prev_prog:
             print("#", end="")
@@ -159,7 +167,11 @@ def simulate(G, N, retweet_prob, candidates, name=""):
     for key in sorted(hist_post):
         post_vals.append(hist_post[key])
         post_keys.append(key)
-    
+
+    l_g_ratio_pre = l_g_ratio_pre / N
+    l_g_ratio_post = l_g_ratio_post / N
+    diff = l_g_ratio_post - l_g_ratio_pre
+
     plt.figure()
     plt.bar(range(len(pre_vals)), pre_vals, align="center", label="Pre")
     plt.xticks(range(len(pre_keys)), pre_keys)
@@ -167,6 +179,7 @@ def simulate(G, N, retweet_prob, candidates, name=""):
     plt.bar(range(len(post_vals)), post_vals, align="center", alpha=0.5, label="Post")
     plt.xticks(range(len(post_keys)), post_keys)
     plt.legend()
+    plt.title(f"{name} change ({round(diff * 100, 2)}%)")
 
 
 def simulate_agg(G, N, retweet_prob, candidates):
